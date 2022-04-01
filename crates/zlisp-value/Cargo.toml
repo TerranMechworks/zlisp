@@ -1,0 +1,22 @@
+[package]
+name = "zlisp-value"
+version = "0.1.0"
+authors = ["Toby Fleming <tobywf@users.noreply.github.com>"]
+edition = "2021"
+description = "Arbitrary value serialization and deserialization of zlisp data"
+readme = "README.md"
+license = "EUPL-1.2"
+repository = "https://github.com/TerranMechworks/zlisp"
+
+autoexamples = false
+autobenches = false
+
+[lib]
+test = false
+doctest = false
+
+[dependencies]
+serde = "1.0.136"
+
+[dev-dependencies]
+serde_test = "1.0.136"

@@ -1,0 +1,29 @@
+[package]
+name = "zlisp-util"
+version = "0.1.0"
+authors = ["Toby Fleming <tobywf@users.noreply.github.com>"]
+edition = "2021"
+description = "A utility for converting zlisp data formamts"
+readme = "README.md"
+license = "EUPL-1.2"
+repository = "https://github.com/TerranMechworks/zlisp"
+
+autoexamples = false
+autobenches = false
+
+[[bin]]
+name = "zlisp"
+path = "src/main.rs"
+
+test = false
+doctest = false
+
+[dependencies]
+clap = { version = "3.1.8", features = ["derive"] }
+
+serde = "1.0.136"
+serde_json = "1.0.79"
+
+zlisp-bin = { path = "../zlisp-bin" }
+zlisp-text = { path = "../zlisp-text" }
+zlisp-value = { path = "../zlisp-value" }
