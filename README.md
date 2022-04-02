@@ -77,13 +77,17 @@ For unquoted tokens, the token is read until a valid delimiter character is foun
 
 As an implementation detail, when deserializing text data, all scalars are read as tokens first. The parsing of the scalar into either int, float, or strings is left as late as possible. This is helpful if the data is being deserialized into a data structure, where the desired data type is known. Otherwise, token are attempted to be parsed into an int first, then a float, and finally, if the previous two steps failed, left as a string.
 
-To prevent this conversion, see quoting.
+To prevent this conversion, or preserve empty strings, see quoting.
 
 #### Quoted
 
-Quoting tokens is complex. First, when reading, a quoted token is always interpreted as a string. This means that values that would otherwise be interpreted as an int or a float may be quoted to avoid this.  Conversely, when serializing text data, it is necessary to quote strings that could be interpreted as an int or a float. However, doing this automatically would make serialization very expensive. There is also no manual quoting support yet, so this is a problem for now. Still, it is very uncommon.
+Quoting tokens is complex.
 
-Second, when a quote character (`"`) is found, further characters are read until another quote is found. This means quotes may contain any otherwise valid delimiter character. There is no provision for escape characters, so a quoted string still cannot contain a quote character (`"`) itself. Also note the quote characters do not count towards the token length.
+When reading text, a quoted token is always interpreted as a string. This means that values that would otherwise be interpreted as an int or a float may be quoted to avoid this. Conversely, when writing text, it is necessary to quote strings that could be interpreted as an int or a float. However, doing this automatically could make serialization expensive. Instead, a heuristic is applied. When writing, if a string contains only characters that could be a valid int or float, then it is quoted. This does cause some false positives, i.e. some invalid numbers are quoted (e.g. `.` or `-`). But this is a small inconvenience, and does not change the validity of the data.
+
+Quoting can also be used to preserve empty strings.
+
+When a quote character (`"`) is found, further characters are read until another quote is found. This means quotes may contain any otherwise valid delimiter character. There is no provision for escape characters, so a quoted string still cannot contain a quote character (`"`) itself. Also note the quote characters do not count towards the token length.
 
 A quote may appear at any point in the value. It also seems like multiple quotes are supported. Therefore, the following tokens are equivalent:
 

@@ -14,6 +14,14 @@ macro_rules! assert_quoted {
 
 #[test]
 fn string_tests() {
+    assert_quoted!("\"\"", "", "\"\"");
+    assert_quoted!("\"0\"", "0", "\"0\"");
+    assert_quoted!("\"-0\"", "-0", "\"-0\"");
+    assert_quoted!("\"+0\"", "+0", "\"+0\"");
+    assert_quoted!("\"0.0\"", "0.0", "\"0.0\"");
+    assert_quoted!("\"-0.0\"", "-0.0", "\"-0.0\"");
+    assert_quoted!("\"+0.0\"", "+0.0", "\"+0.0\"");
+
     assert_quoted!("foo", "foo", "foo");
     assert_quoted!("\"f\"oo", "foo", "foo");
     assert_quoted!("f\"o\"o", "foo", "foo");

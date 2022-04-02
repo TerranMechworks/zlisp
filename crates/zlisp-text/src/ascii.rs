@@ -22,6 +22,11 @@ pub fn from_raw<'a>(s: &'a str, loc: Location) -> Result<()> {
 }
 
 pub fn to_raw<'a>(s: &'a str) -> Result<bool> {
+    // empty strings must always be quoted, otherwise they will disappear
+    if s.is_empty() {
+        return Ok(true);
+    }
+
     let v = s.as_bytes();
 
     let len: i32 = v
@@ -33,21 +38,33 @@ pub fn to_raw<'a>(s: &'a str) -> Result<bool> {
         return Err(Error::new(ErrorCode::StringTooLong, None));
     }
 
-    // TODO: figure out when strings need quoting
-
     let mut needs_quoting = false;
+    let mut possible_number = true;
     for b in v.iter().copied() {
         match b {
             b'\0' => Err(Error::new(ErrorCode::StringContainsNull, None)),
             b'"' => Err(Error::new(ErrorCode::StringContainsQuote, None)),
             b' ' | b'\t' | b'\r' | b'\n' | b'(' | b')' => {
+                possible_number = false;
                 needs_quoting = true;
                 Ok(())
             }
-            _ if b.is_ascii() => Ok(()),
+            b'-' | b'+' | b'.' | b'0'..=b'9' => {
+                // possible number remains true
+                Ok(())
+            }
+            _ if b.is_ascii() => {
+                possible_number = false;
+                Ok(())
+            }
             _ => Err(Error::new(ErrorCode::StringContainsInvalidChar, None)),
         }?;
     }
 
-    Ok(needs_quoting)
+    // if the string needs quoting, it is. also, if the string *could* be a
+    // number, we quote it regardless. this avoids actually needing to parse
+    // the string to an integer or a float, which is expensive. the downside is
+    // there may be false positives, but worst case is a string is quoted when
+    // it didn't need to be.
+    Ok(needs_quoting || possible_number)
 }
