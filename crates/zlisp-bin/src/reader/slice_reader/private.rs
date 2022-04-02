@@ -208,13 +208,4 @@ impl<'a> SliceReader<'a> {
             Err(Error::new(ErrorCode::TrailingData, Some(self.offset)))
         }
     }
-
-    /// Binary zlisp data must always start with a list of length 1
-    pub fn unwrap_outer_list(&mut self) -> Result<()> {
-        let (len, offset) = self.read_list()?;
-        match len {
-            1 => Ok(()),
-            _ => Err(Error::new(ErrorCode::InvalidListLength, Some(offset))),
-        }
-    }
 }

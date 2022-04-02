@@ -8,7 +8,6 @@ where
     T: ?Sized + serde::Serialize,
 {
     let mut serializer = io_writer::IoWriter::new(std::io::Cursor::new(Vec::new()));
-    serializer.wrap_outer_list()?;
     value.serialize(&mut serializer)?;
     let cursor = serializer.finish()?;
     Ok(cursor.into_inner())
@@ -21,7 +20,6 @@ where
     W: std::io::Write,
 {
     let mut serializer = io_writer::IoWriter::new(writer);
-    serializer.wrap_outer_list()?;
     value.serialize(&mut serializer)?;
     let _ = serializer.finish()?;
     Ok(())

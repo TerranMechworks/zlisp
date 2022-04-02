@@ -1,5 +1,5 @@
 use crate::ascii::to_raw;
-use crate::constants::{FLOAT, INT, LIST, MAX_LIST_LEN, OUTER_LIST_LEN, STRING};
+use crate::constants::{FLOAT, INT, LIST, MAX_LIST_LEN, STRING};
 use crate::error::{Error, ErrorCode, Result};
 use std::io::Write;
 
@@ -63,11 +63,5 @@ impl<W: Write> IoWriter<W> {
             .flush()
             .map_err(|e| Error::new(ErrorCode::IO(e), None))?;
         Ok(self.inner)
-    }
-
-    /// Binary zlisp data must always start with a list of length 1
-    pub fn wrap_outer_list(&mut self) -> Result<()> {
-        self.write_all(&LIST.to_le_bytes())?;
-        self.write_all(&OUTER_LIST_LEN.to_le_bytes())
     }
 }

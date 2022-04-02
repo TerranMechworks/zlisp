@@ -22,7 +22,7 @@ macro_rules! assert_err {
 
 macro_rules! assert_unsupported {
     ($type:ty) => {
-        let input = BinBuilder::root().build();
+        let input = BinBuilder::new().build();
         let err = from_slice::<$type>(&input).unwrap_err();
         assert_matches!(err.code(), ErrorCode::UnsupportedType);
     };
@@ -47,7 +47,7 @@ fn signed_tests() {
     assert_unsupported!(i16);
     assert_unsupported!(i64);
 
-    let input = BinBuilder::root().int(0).build();
+    let input = BinBuilder::new().int(0).build();
     assert_ok!(i32, &input, 0);
 }
 
@@ -63,7 +63,7 @@ fn unsigned_tests() {
 fn float_tests() {
     assert_unsupported!(f64);
 
-    let input = BinBuilder::root().float(0.0).build();
+    let input = BinBuilder::new().float(0.0).build();
     assert_ok!(f32, &input, 0.0);
 }
 
@@ -74,7 +74,7 @@ fn char_tests() {
 
 #[test]
 fn string_tests() {
-    let input = BinBuilder::root().str("foo").build();
+    let input = BinBuilder::new().str("foo").build();
     assert_ok!(&str, &input, "foo");
     assert_ok!(String, &input, "foo");
 }
@@ -86,23 +86,23 @@ fn bytes_tests() {
 
 #[test]
 fn option_tests() {
-    let input = BinBuilder::root().list(0).build();
+    let input = BinBuilder::new().list(0).build();
     assert_ok!(Option<i32>, &input, None);
-    let input = BinBuilder::root().list(1).int(-1).build();
+    let input = BinBuilder::new().list(1).int(-1).build();
     assert_ok!(Option<i32>, &input, Some(-1));
 
     type Value = Option<()>;
 
-    let input = BinBuilder::root().list(0).build();
+    let input = BinBuilder::new().list(0).build();
     assert_ok!(Value, &input, None);
-    let input = BinBuilder::root().list(1).list(0).build();
+    let input = BinBuilder::new().list(1).list(0).build();
     assert_ok!(Value, &input, Some(()));
 
-    let input = BinBuilder::root().list(2).build();
+    let input = BinBuilder::new().list(2).build();
     assert_err!(
         Value,
         &input,
-        12,
+        4,
         ErrorCode::ExpectedListOfLength {
             expected_min: 0,
             expected_max: 1,
@@ -115,14 +115,14 @@ fn option_tests() {
 fn unit_type_tests() {
     type Value = ();
 
-    let input = BinBuilder::root().list(0).build();
+    let input = BinBuilder::new().list(0).build();
     assert_ok!(Value, &input, ());
 
-    let input = BinBuilder::root().list(1).build();
+    let input = BinBuilder::new().list(1).build();
     assert_err!(
         Value,
         &input,
-        12,
+        4,
         ErrorCode::ExpectedListOfLength {
             expected_min: 0,
             expected_max: 0,
@@ -137,14 +137,14 @@ fn unit_struct_tests() {
     struct UnitStruct;
     type Value = UnitStruct;
 
-    let input = BinBuilder::root().list(0).build();
+    let input = BinBuilder::new().list(0).build();
     assert_ok!(Value, &input, UnitStruct);
 
-    let input = BinBuilder::root().list(1).build();
+    let input = BinBuilder::new().list(1).build();
     assert_err!(
         Value,
         &input,
-        12,
+        4,
         ErrorCode::ExpectedListOfLength {
             expected_min: 0,
             expected_max: 0,
@@ -160,7 +160,7 @@ fn newtype_struct_tests() {
     type Value = NewTypeStruct;
 
     // a newtype struct is always deserialized as the inner type
-    let input = BinBuilder::root().int(-1).build();
+    let input = BinBuilder::new().int(-1).build();
     assert_ok!(Value, &input, NewTypeStruct(-1));
 }
 
@@ -168,40 +168,40 @@ fn newtype_struct_tests() {
 fn seq_tests() {
     type Value = Vec<i32>;
 
-    let input = BinBuilder::root().list(0).build();
+    let input = BinBuilder::new().list(0).build();
     assert_ok!(Value, &input, vec![]);
-    let input = BinBuilder::root().list(1).int(-1).build();
+    let input = BinBuilder::new().list(1).int(-1).build();
     assert_ok!(Value, &input, vec![-1]);
-    let input = BinBuilder::root().list(2).int(-1).int(-2).build();
+    let input = BinBuilder::new().list(2).int(-1).int(-2).build();
     assert_ok!(Value, &input, vec![-1, -2]);
 }
 
 #[test]
 fn tuple_tests() {
-    let input = BinBuilder::root().list(1).int(-1).build();
+    let input = BinBuilder::new().list(1).int(-1).build();
     assert_ok!((i32,), &input, (-1,));
 
     type Value = ((),);
 
-    let input = BinBuilder::root().list(1).list(0).build();
+    let input = BinBuilder::new().list(1).list(0).build();
     assert_ok!(Value, &input, ((),));
 
-    let input = BinBuilder::root().list(0).build();
+    let input = BinBuilder::new().list(0).build();
     assert_err!(
         Value,
         &input,
-        12,
+        4,
         ErrorCode::ExpectedListOfLength {
             expected_min: 1,
             expected_max: 1,
             found: 0,
         }
     );
-    let input = BinBuilder::root().list(2).build();
+    let input = BinBuilder::new().list(2).build();
     assert_err!(
         Value,
         &input,
-        12,
+        4,
         ErrorCode::ExpectedListOfLength {
             expected_min: 1,
             expected_max: 1,
@@ -216,25 +216,25 @@ fn tuple_struct_tests() {
     struct TupleStruct(i32, i32);
     type Value = TupleStruct;
 
-    let input = BinBuilder::root().list(2).int(-1).int(-2).build();
+    let input = BinBuilder::new().list(2).int(-1).int(-2).build();
     assert_ok!(Value, &input, TupleStruct(-1, -2));
 
-    let input = BinBuilder::root().list(1).build();
+    let input = BinBuilder::new().list(1).build();
     assert_err!(
         Value,
         &input,
-        12,
+        4,
         ErrorCode::ExpectedListOfLength {
             expected_min: 2,
             expected_max: 2,
             found: 1,
         }
     );
-    let input = BinBuilder::root().list(3).build();
+    let input = BinBuilder::new().list(3).build();
     assert_err!(
         Value,
         &input,
-        12,
+        4,
         ErrorCode::ExpectedListOfLength {
             expected_min: 2,
             expected_max: 2,
@@ -247,14 +247,14 @@ fn tuple_struct_tests() {
 fn map_tests() {
     type Value = HashMap<i32, i32>;
 
-    let input = BinBuilder::root().list(0).build();
+    let input = BinBuilder::new().list(0).build();
     assert_ok!(Value, &input, map![]);
 
-    let input = BinBuilder::root().list(2).int(-1).int(-2).build();
+    let input = BinBuilder::new().list(2).int(-1).int(-2).build();
     assert_ok!(Value, &input, map![-1 => -2]);
 
-    let input = BinBuilder::root().list(1).int(-1).build();
-    assert_err!(Value, &input, 16, ErrorCode::ExpectedKeyValuePair);
+    let input = BinBuilder::new().list(1).int(-1).build();
+    assert_err!(Value, &input, 8, ErrorCode::ExpectedKeyValuePair);
 }
 
 #[test]
@@ -266,7 +266,7 @@ fn struct_tests() {
     }
     type Value = Struct;
 
-    let input = BinBuilder::root()
+    let input = BinBuilder::new()
         .list(4)
         .str("a")
         .int(-1)
@@ -274,7 +274,7 @@ fn struct_tests() {
         .int(-2)
         .build();
     assert_ok!(Value, &input, Struct { a: -1, b: -2 });
-    let input = BinBuilder::root()
+    let input = BinBuilder::new()
         .list(4)
         .str("b")
         .int(-2)
@@ -283,10 +283,10 @@ fn struct_tests() {
         .build();
     assert_ok!(Value, &input, Struct { a: -1, b: -2 });
 
-    let input = BinBuilder::root().list(1).build();
-    assert_err!(Value, &input, 16, ErrorCode::ExpectedKeyValuePair);
-    let input = BinBuilder::root().list(3).str("a").int(-1).build();
-    assert_err!(Value, &input, 33, ErrorCode::ExpectedKeyValuePair);
+    let input = BinBuilder::new().list(1).build();
+    assert_err!(Value, &input, 8, ErrorCode::ExpectedKeyValuePair);
+    let input = BinBuilder::new().list(3).str("a").int(-1).build();
+    assert_err!(Value, &input, 25, ErrorCode::ExpectedKeyValuePair);
 }
 
 #[test]
@@ -300,15 +300,15 @@ fn struct_optional_tests() {
     }
     type Value = OptStruct;
 
-    let input = BinBuilder::root().list(2).str("a").int(-1).build();
+    let input = BinBuilder::new().list(2).str("a").int(-1).build();
     assert_ok!(Value, &input, OptStruct { a: -1, b: 0 });
-    let input = BinBuilder::root().list(2).str("b").int(-2).build();
+    let input = BinBuilder::new().list(2).str("b").int(-2).build();
     assert_ok!(Value, &input, OptStruct { a: 0, b: -2 });
 
-    let input = BinBuilder::root().list(1).build();
-    assert_err!(Value, &input, 16, ErrorCode::ExpectedKeyValuePair);
-    let input = BinBuilder::root().list(3).str("a").int(-1).build();
-    assert_err!(Value, &input, 33, ErrorCode::ExpectedKeyValuePair);
+    let input = BinBuilder::new().list(1).build();
+    assert_err!(Value, &input, 8, ErrorCode::ExpectedKeyValuePair);
+    let input = BinBuilder::new().list(3).str("a").int(-1).build();
+    assert_err!(Value, &input, 25, ErrorCode::ExpectedKeyValuePair);
 }
 
 #[test]
@@ -319,11 +319,11 @@ fn enum_unit_variant_tests() {
     }
     type Value = UnitVariant;
 
-    let input = BinBuilder::root().str("V").build();
+    let input = BinBuilder::new().str("V").build();
     assert_ok!(Value, &input, UnitVariant::V);
 
-    let input = BinBuilder::root().str("!").build();
-    let err = unwrap_err!(Value, &input, 8);
+    let input = BinBuilder::new().str("!").build();
+    let err = unwrap_err!(Value, &input, 0);
     assert_matches!(err.code(), ErrorCode::Custom(s) if s.contains("unknown variant"))
 }
 
@@ -335,29 +335,29 @@ fn enum_newtype_variant_tests() {
     }
     type Value = NewTypeVariant;
 
-    let input = BinBuilder::root().str("V").list(1).int(-1).build();
+    let input = BinBuilder::new().str("V").list(1).int(-1).build();
     assert_ok!(Value, &input, NewTypeVariant::V(-1));
 
-    let input = BinBuilder::root().str("!").build();
-    let err = unwrap_err!(Value, &input, 8);
+    let input = BinBuilder::new().str("!").build();
+    let err = unwrap_err!(Value, &input, 0);
     assert_matches!(err.code(), ErrorCode::Custom(s) if s.contains("unknown variant"));
 
-    let input = BinBuilder::root().str("V").list(0).build();
+    let input = BinBuilder::new().str("V").list(0).build();
     assert_err!(
         Value,
         &input,
-        21,
+        13,
         ErrorCode::ExpectedListOfLength {
             expected_min: 1,
             expected_max: 1,
             found: 0,
         }
     );
-    let input = BinBuilder::root().str("V").list(2).build();
+    let input = BinBuilder::new().str("V").list(2).build();
     assert_err!(
         Value,
         &input,
-        21,
+        13,
         ErrorCode::ExpectedListOfLength {
             expected_min: 1,
             expected_max: 1,
@@ -374,29 +374,29 @@ fn enum_tuple_variant_tests() {
     }
     type Value = TupleVariant;
 
-    let input = BinBuilder::root().str("V").list(2).int(-1).int(-2).build();
+    let input = BinBuilder::new().str("V").list(2).int(-1).int(-2).build();
     assert_ok!(Value, &input, TupleVariant::V(-1, -2));
 
-    let input = BinBuilder::root().str("!").build();
-    let err = unwrap_err!(Value, &input, 8);
+    let input = BinBuilder::new().str("!").build();
+    let err = unwrap_err!(Value, &input, 0);
     assert_matches!(err.code(), ErrorCode::Custom(s) if s.contains("unknown variant"));
 
-    let input = BinBuilder::root().str("V").list(1).build();
+    let input = BinBuilder::new().str("V").list(1).build();
     assert_err!(
         Value,
         &input,
-        21,
+        13,
         ErrorCode::ExpectedListOfLength {
             expected_min: 2,
             expected_max: 2,
             found: 1,
         }
     );
-    let input = BinBuilder::root().str("V").list(3).build();
+    let input = BinBuilder::new().str("V").list(3).build();
     assert_err!(
         Value,
         &input,
-        21,
+        13,
         ErrorCode::ExpectedListOfLength {
             expected_min: 2,
             expected_max: 2,
@@ -413,7 +413,7 @@ fn enum_struct_variant_tests() {
     }
     type Value = StructVariant;
 
-    let input = BinBuilder::root()
+    let input = BinBuilder::new()
         .str("V")
         .list(4)
         .str("a")
@@ -422,7 +422,7 @@ fn enum_struct_variant_tests() {
         .int(-2)
         .build();
     assert_ok!(Value, &input, StructVariant::V { a: -1, b: -2 });
-    let input = BinBuilder::root()
+    let input = BinBuilder::new()
         .str("V")
         .list(4)
         .str("b")
@@ -432,14 +432,14 @@ fn enum_struct_variant_tests() {
         .build();
     assert_ok!(Value, &input, StructVariant::V { a: -1, b: -2 });
 
-    let input = BinBuilder::root().str("!").build();
-    let err = unwrap_err!(Value, &input, 8);
+    let input = BinBuilder::new().str("!").build();
+    let err = unwrap_err!(Value, &input, 0);
     assert_matches!(err.code(), ErrorCode::Custom(s) if s.contains("unknown variant"));
 
-    let input = BinBuilder::root().str("V").list(1).build();
-    assert_err!(Value, &input, 25, ErrorCode::ExpectedKeyValuePair);
-    let input = BinBuilder::root().str("V").list(3).str("a").int(-1).build();
-    assert_err!(Value, &input, 42, ErrorCode::ExpectedKeyValuePair);
+    let input = BinBuilder::new().str("V").list(1).build();
+    assert_err!(Value, &input, 17, ErrorCode::ExpectedKeyValuePair);
+    let input = BinBuilder::new().str("V").list(3).str("a").int(-1).build();
+    assert_err!(Value, &input, 34, ErrorCode::ExpectedKeyValuePair);
 }
 
 #[test]
@@ -456,7 +456,7 @@ fn enum_struct_variant_optional_tests() {
 
     type Value = OptStructVariant;
 
-    let input = BinBuilder::root()
+    let input = BinBuilder::new()
         .str("V")
         .list(4)
         .str("a")
@@ -465,7 +465,7 @@ fn enum_struct_variant_optional_tests() {
         .int(-2)
         .build();
     assert_ok!(Value, &input, OptStructVariant::V { a: -1, b: -2 });
-    let input = BinBuilder::root()
+    let input = BinBuilder::new()
         .str("V")
         .list(4)
         .str("b")
@@ -475,17 +475,17 @@ fn enum_struct_variant_optional_tests() {
         .build();
     assert_ok!(Value, &input, OptStructVariant::V { a: -1, b: -2 });
 
-    let input = BinBuilder::root().str("V").list(2).str("a").int(-1).build();
+    let input = BinBuilder::new().str("V").list(2).str("a").int(-1).build();
     assert_ok!(Value, &input, OptStructVariant::V { a: -1, b: 0 });
-    let input = BinBuilder::root().str("V").list(2).str("b").int(-2).build();
+    let input = BinBuilder::new().str("V").list(2).str("b").int(-2).build();
     assert_ok!(Value, &input, OptStructVariant::V { a: 0, b: -2 });
 
-    let input = BinBuilder::root().str("!").build();
-    let err = unwrap_err!(Value, &input, 8);
+    let input = BinBuilder::new().str("!").build();
+    let err = unwrap_err!(Value, &input, 0);
     assert_matches!(err.code(), ErrorCode::Custom(s) if s.contains("unknown variant"));
 
-    let input = BinBuilder::root().str("V").list(1).build();
-    assert_err!(Value, &input, 25, ErrorCode::ExpectedKeyValuePair);
-    let input = BinBuilder::root().str("V").list(3).str("a").int(-1).build();
-    assert_err!(Value, &input, 42, ErrorCode::ExpectedKeyValuePair);
+    let input = BinBuilder::new().str("V").list(1).build();
+    assert_err!(Value, &input, 17, ErrorCode::ExpectedKeyValuePair);
+    let input = BinBuilder::new().str("V").list(3).str("a").int(-1).build();
+    assert_err!(Value, &input, 34, ErrorCode::ExpectedKeyValuePair);
 }

@@ -2,22 +2,14 @@ pub const INT: i32 = 1;
 pub const FLOAT: i32 = 2;
 pub const STRING: i32 = 3;
 pub const LIST: i32 = 4;
-pub const OUTER_LIST_LEN: i32 = 2;
 pub const INVALID_TYPE: i32 = 5;
 pub const MAX_LIST_LEN: i32 = 4096;
 
 pub struct BinBuilder(Vec<u8>);
 
 impl BinBuilder {
-    pub const fn empty() -> Self {
+    pub const fn new() -> Self {
         Self(Vec::new())
-    }
-
-    pub fn root() -> Self {
-        let mut v = Self(Vec::new());
-        v.push_i32(LIST);
-        v.push_i32(OUTER_LIST_LEN);
-        v
     }
 
     pub fn build(self) -> Vec<u8> {

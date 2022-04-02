@@ -53,8 +53,6 @@ Strings are encoded with the string length as an int, followed by the characters
 
 For a list, the encoded list length is the length + 1. This is encoded as an int, followed by each value. This means the encoded length of an empty list is 1, and an encoded length of 0 or less is invalid. We haven't tested what the actual maximum length of a list is, but to avoid issues with malformed data, the length limit is 4096.
 
-An additional restriction on the binary data format is that the outermost value must be a list with the length of 1. The binary data format read methods strip this outer list, and the binary data format write methods add it. There are no examples of the value this outer list contains being anything other than a list, but this isn't validated.
-
 ## Text data format
 
 For the text data format, the input and output are ASCII byte sequence with no embedded null characters.
