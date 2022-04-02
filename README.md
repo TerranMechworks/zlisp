@@ -103,7 +103,7 @@ We don't yet quite know how ints are parsed in engines. We have examples of ints
 
 In the text format, ints are represented in decimal, with an optional sign followed by one or more digits. This regular expression approximates a valid decimal representation: `[-+]?[0-9]+`. (The parsing does not use a regular expression.)
 
-For specific values, ints may be represented in hexadecimal. From testing, it seems a sign is not support. So the hexadecimal text representation has the prefix `0x`, followed by one or more hex digits of any case. This regular expression approximates a valid hexadecimal representation: `0x[0-9a-fA-F]+`. (The parsing does not use a regular expression.) Since it seems to be contextual, a newtype helper is provided for deserializing and serializing hexadecimal ints. This also ensures these values round-trip properly. The underlying data type is still a 32-bit integer.
+For specific values, ints may be represented in hexadecimal. From testing, it seems a sign is not supported. So the hexadecimal text representation has the prefix `0x`, followed by one or more hex digits of any case. This regular expression approximates a valid hexadecimal representation: `0x[0-9a-fA-F]+`. (The parsing does not use a regular expression.) Since it seems to be contextual, a newtype helper is provided for deserializing and serializing hexadecimal ints. This also ensures these values round-trip properly. The underlying data type is still a 32-bit integer.
 
 ### Float representation
 
@@ -122,17 +122,17 @@ The following types from Serde's data model are not supported:
 
 The following types and mappings are supported:
 
-* Primitive types: `i32`, `f32`
-* Strings: `String`, and `&str` (for binary deserialization only)
-* Newtype structures: transparent
+* Primitive types `i32` and `f32`: the value or it's representation
+* `String`, and `&str` (for binary deserialization only): the value
 * Options: either `()` for `None` or `(...)` for `Some(...)`
 * Units: always `()`
 * Sequences: for example, `(V1 V2...)`, or `()` for an empty sequence
 * Tuples: for example, `(V1 V2...)`, or `()` for an empty tuple
 * Maps: for example, `(K1 V1 K2 V2...)`, or `()` for an empty map. Note that if the key ordering in the underlying data structure is not deterministic (like `HashMap`), the serialization also won't be
 * Structures: see maps
+* Newtype structures: transparent
 * Tuple structures: see tuples
 * Enum unit variants: for example, `V` for the variant `E::V` in `enum E { V, ... }`
 * Enum newtype variants: for example, `V(1)` for the variant `E::V(1)` in `enum E { V(i32), ... }`
-* Enum tuple variants: for example, `V(1, 0.0)` for the variant `E::V(1, 0.0)` in `enum E { V(i32, f32), ... }`
+* Enum tuple variants: for example, `V(1 2)` for the variant `E::V(1, 2)` in `enum E { V(i32, i32), ... }`
 * Enum structure variants: for example, `V(a 1 b 2)` for the variant `E::V { a = 1, b = 2 }` in  `enum E { V { a: i32, b: i32 } }`
