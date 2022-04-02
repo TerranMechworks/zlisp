@@ -1,7 +1,7 @@
 /target
 Cargo.lock
-/fuzz/artifacts/
-/fuzz/corpus/
+/fuzz/*/
+!/fuzz/fuzz_targets/
 .DS_Store
 README.html
 /.vscode
