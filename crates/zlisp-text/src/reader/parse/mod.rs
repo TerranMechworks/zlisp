@@ -10,7 +10,8 @@ pub enum Any {
     ListStart,
 }
 
-fn parse_i32_inner<'a>(s: &'a str, loc: Location) -> Result<i32> {
+#[allow(clippy::from_str_radix_10)]
+fn parse_i32_inner(s: &str, loc: Location) -> Result<i32> {
     // i32::from_str_radix does exactly what we want. it allows signs (- or +),
     // it does not allow empty strings, or just the sign. and it only allows
     // digits other than the sign.
@@ -23,18 +24,17 @@ fn parse_i32_inner<'a>(s: &'a str, loc: Location) -> Result<i32> {
     })
 }
 
-/// hack to construct a new ParseFloatError
-
 fn pfe_invalid() -> ParseFloatError {
+    // hack to construct a new ParseFloatError
     "-".parse::<f32>().unwrap_err()
 }
 
-fn float_invalid<'a>(e: ParseFloatError, s: &'a str, loc: Location) -> Error {
+fn float_invalid(e: ParseFloatError, s: &str, loc: Location) -> Error {
     let code = ErrorCode::ParseFloatError { e, s: s.to_owned() };
     Error::new(code, Some(loc))
 }
 
-fn parse_f32_inner<'a>(s: &'a str, loc: Location) -> Result<f32> {
+fn parse_f32_inner(s: &str, loc: Location) -> Result<f32> {
     // first, parsing floats is hard, see the core `dec2flt` module.
     // unfortunately, Rust's float parsing allows for exponent forms (e.g.
     // '2.5e10'), and non-finite values (e.g. 'inf', '-inf', '+infinity',
@@ -82,7 +82,7 @@ fn parse_f32_inner<'a>(s: &'a str, loc: Location) -> Result<f32> {
         .map_err(|e| float_invalid(e, s, loc))
 }
 
-fn parse_any_inner<'a>(s: &'a str, loc: Location) -> Result<Any> {
+fn parse_any_inner(s: &str, loc: Location) -> Result<Any> {
     if let Ok(v) = parse_i32_inner(s, loc.clone()) {
         return Ok(Any::Int(v));
     }
@@ -92,7 +92,7 @@ fn parse_any_inner<'a>(s: &'a str, loc: Location) -> Result<Any> {
     Ok(Any::String(s.to_owned()))
 }
 
-pub fn parse_i32<'a>(span: Span<'a>) -> Result<i32> {
+pub fn parse_i32(span: Span<'_>) -> Result<i32> {
     match span.token {
         Token::Text(text) => match text {
             Text::Quoted(_) => {
@@ -105,7 +105,7 @@ pub fn parse_i32<'a>(span: Span<'a>) -> Result<i32> {
     }
 }
 
-pub fn parse_f32<'a>(span: Span<'a>) -> Result<f32> {
+pub fn parse_f32(span: Span<'_>) -> Result<f32> {
     match span.token {
         Token::Text(text) => match text {
             Text::Quoted(_) => {
@@ -118,7 +118,7 @@ pub fn parse_f32<'a>(span: Span<'a>) -> Result<f32> {
     }
 }
 
-pub fn parse_string<'a>(span: Span<'a>) -> Result<String> {
+pub fn parse_string(span: Span<'_>) -> Result<String> {
     match span.token {
         Token::Text(text) => match text {
             Text::Quoted(s) => Ok(s),
@@ -128,7 +128,7 @@ pub fn parse_string<'a>(span: Span<'a>) -> Result<String> {
     }
 }
 
-pub fn parse_any<'a>(span: Span<'a>) -> Result<Any> {
+pub fn parse_any(span: Span<'_>) -> Result<Any> {
     match span.token {
         Token::Text(text) => match text {
             Text::Quoted(s) => Ok(Any::String(s)),

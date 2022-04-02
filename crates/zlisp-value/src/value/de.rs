@@ -36,7 +36,7 @@ impl<'de> de::Visitor<'de> for ValueVisitor {
     {
         let mut vec = visitor
             .size_hint()
-            .map_or_else(|| Vec::new(), |capacity| Vec::with_capacity(capacity));
+            .map_or_else(Vec::new, Vec::with_capacity);
         while let Some(elem) = visitor.next_element()? {
             vec.push(elem);
         }

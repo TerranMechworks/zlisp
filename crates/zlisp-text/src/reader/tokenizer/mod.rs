@@ -144,7 +144,7 @@ impl<'a> Tokenizer<'a> {
                 // found a delimiter
                 ' ' | '\t' | '\r' | '\n' | '(' | ')' => {
                     let (value, remaining) = start.split_at(o);
-                    return from_raw(&value, str_loc).map(|()| (Text::Unquoted(value), remaining));
+                    return from_raw(value, str_loc).map(|()| (Text::Unquoted(value), remaining));
                 }
                 '\0' => {
                     return Err(Error::new(

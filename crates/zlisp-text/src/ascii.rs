@@ -1,7 +1,7 @@
 use crate::constants::MAX_STRING_LEN;
 use crate::error::{Error, ErrorCode, Location, Result};
 
-pub fn from_raw<'a>(s: &'a str, loc: Location) -> Result<()> {
+pub fn from_raw(s: &str, loc: Location) -> Result<()> {
     let v = s.as_bytes();
     // SAFETY: MAX_STRING_LEN < i32::MAX, usize::MIN > i32::MIN
     if v.len() > MAX_STRING_LEN {
@@ -23,7 +23,7 @@ pub fn from_raw<'a>(s: &'a str, loc: Location) -> Result<()> {
     Ok(())
 }
 
-pub fn to_raw<'a>(s: &'a str) -> Result<bool> {
+pub fn to_raw(s: &str) -> Result<bool> {
     // empty strings must always be quoted, otherwise they will disappear
     if s.is_empty() {
         return Ok(true);

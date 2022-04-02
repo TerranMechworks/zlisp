@@ -47,7 +47,7 @@ impl ser::Serializer for Gather {
         let value = if needs_quoting {
             format!("\"{}\"", v)
         } else {
-            format!("{}", v)
+            v.to_string()
         };
         Ok(Element::Scalar(value))
     }

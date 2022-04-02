@@ -3,14 +3,14 @@ use zlisp_value::Value;
 
 #[derive(clap::ArgEnum, Debug, Clone)]
 enum FromFormat {
-    JSON,
+    Json,
     Bin,
     Text,
 }
 
 #[derive(clap::ArgEnum, Debug, Clone)]
 enum ToFormat {
-    JSON,
+    Json,
     Bin,
     Text,
     Ast,
@@ -58,7 +58,7 @@ fn main() {
     let args: Args = Args::parse();
     println!("Reading {}", args.input);
     let value: Value = match args.from {
-        FromFormat::JSON => {
+        FromFormat::Json => {
             let input = std::fs::read_to_string(args.input).unwrap();
             // due to serde_json's float handling (f64), an indirection is needed
             let value: serde_json::Value = serde_json::from_str(&input).unwrap();
@@ -75,7 +75,7 @@ fn main() {
     };
     println!("Writing {}", args.output);
     match args.to {
-        ToFormat::JSON => {
+        ToFormat::Json => {
             let output = serde_json::to_string_pretty(&value).unwrap();
             std::fs::write(args.output, output).unwrap();
         }

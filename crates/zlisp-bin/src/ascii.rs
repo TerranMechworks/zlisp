@@ -1,7 +1,7 @@
 use crate::constants::MAX_STRING_LEN;
 use crate::error::{Error, ErrorCode, Result};
 
-pub fn from_raw<'a>(v: &'a [u8], start_offset: usize) -> Result<&'a str> {
+pub fn from_raw(v: &[u8], start_offset: usize) -> Result<&str> {
     // SAFETY: MAX_STRING_LEN < i32::MAX, usize::MIN > i32::MIN
     if v.len() > MAX_STRING_LEN {
         return Err(Error::new(ErrorCode::StringTooLong, Some(start_offset)));
@@ -26,7 +26,7 @@ pub fn from_raw<'a>(v: &'a [u8], start_offset: usize) -> Result<&'a str> {
     Ok(unsafe { std::str::from_utf8_unchecked(v) })
 }
 
-pub fn to_raw<'a>(s: &'a str) -> Result<(&'a [u8], i32)> {
+pub fn to_raw(s: &str) -> Result<(&[u8], i32)> {
     let v = s.as_bytes();
 
     if v.len() > MAX_STRING_LEN {
