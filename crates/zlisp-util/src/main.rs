@@ -2,18 +2,26 @@ use clap::Parser;
 use zlisp_value::Value;
 
 #[derive(clap::ArgEnum, Debug, Clone)]
-enum Format {
+enum FromFormat {
     JSON,
     Bin,
     Text,
 }
 
+#[derive(clap::ArgEnum, Debug, Clone)]
+enum ToFormat {
+    JSON,
+    Bin,
+    Text,
+    Ast,
+}
+
 #[derive(Parser, Debug, Clone)]
 struct Args {
     #[clap(long, arg_enum, help = "The input format")]
-    from: Format,
+    from: FromFormat,
     #[clap(long, arg_enum, help = "The output format")]
-    to: Format,
+    to: ToFormat,
     #[clap(help = "The source path")]
     input: String,
     #[clap(help = "The destination path (will be overwritten)")]
@@ -50,34 +58,38 @@ fn main() {
     let args: Args = Args::parse();
     println!("Reading {}", args.input);
     let value: Value = match args.from {
-        Format::JSON => {
+        FromFormat::JSON => {
             let input = std::fs::read_to_string(args.input).unwrap();
             // due to serde_json's float handling (f64), an indirection is needed
             let value: serde_json::Value = serde_json::from_str(&input).unwrap();
             json_to_zlisp(value)
         }
-        Format::Bin => {
+        FromFormat::Bin => {
             let input = std::fs::read(args.input).unwrap();
             zlisp_bin::from_slice(&input).unwrap()
         }
-        Format::Text => {
+        FromFormat::Text => {
             let input = std::fs::read_to_string(args.input).unwrap();
             zlisp_text::from_str(&input).unwrap()
         }
     };
     println!("Writing {}", args.output);
     match args.to {
-        Format::JSON => {
+        ToFormat::JSON => {
             let output = serde_json::to_string_pretty(&value).unwrap();
             std::fs::write(args.output, output).unwrap();
         }
-        Format::Bin => {
+        ToFormat::Bin => {
             let output = zlisp_bin::to_vec(&value).unwrap();
             std::fs::write(args.output, output).unwrap();
         }
-        Format::Text => {
+        ToFormat::Text => {
             let config = zlisp_text::WhitespaceConfig::default();
             let output = zlisp_text::to_pretty(&value, config).unwrap();
+            std::fs::write(args.output, output).unwrap();
+        }
+        ToFormat::Ast => {
+            let output = format!("{:#?}", value);
             std::fs::write(args.output, output).unwrap();
         }
     }
