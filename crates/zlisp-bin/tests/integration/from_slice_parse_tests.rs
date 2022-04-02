@@ -1,5 +1,5 @@
 use super::any::Any;
-use super::bin_builder::{BinBuilder, FLOAT, INT, INVALID_TYPE, LIST, STRING};
+use super::bin_builder::{BinBuilder, FLOAT, INT, INVALID_TYPE, LIST, MAX_LIST_LEN, STRING};
 use assert_matches::assert_matches;
 use zlisp_bin::{from_slice, ErrorCode, TokenType};
 
@@ -427,8 +427,8 @@ fn parse_str() {
         }
     );
 
-    let input = BinBuilder::root().i32(STRING).i32(i32::MAX).build();
-    let len = i32::MAX as usize;
+    let input = BinBuilder::root().i32(STRING).i32(255).build();
+    let len = 255;
     let err = from_slice::<&str>(&input).unwrap_err();
     assert_matches!(err.code(), ErrorCode::InsufficientData {
         expected,
@@ -452,7 +452,7 @@ fn parse_str_content() {
 
     let over_len = " ".repeat(256);
     let input = BinBuilder::root().str(&over_len).build();
-    assert_err!(&str, &input, 16, ErrorCode::StringTooLong);
+    assert_err!(&str, &input, 12, ErrorCode::StringTooLong);
 }
 
 #[test]
@@ -581,12 +581,28 @@ fn parse_list() {
 
     let input = BinBuilder::root().i32(LIST).i32(1).build();
     assert_ok!(Vec<i32>, &input, &[]);
+    let mut builder = BinBuilder::root().i32(LIST).i32(MAX_LIST_LEN + 1);
+    let mut expected = Vec::with_capacity(MAX_LIST_LEN as usize);
+    for i in 0..MAX_LIST_LEN {
+        builder = builder.int(i);
+        expected.push(i);
+    }
+    let input = builder.build();
+    assert_ok!(Vec<i32>, &input, &expected[..]);
+
+    // under length
     let input = BinBuilder::root().i32(LIST).i32(0).build();
     assert_err!(Vec<i32>, &input, 12, ErrorCode::InvalidListLength);
     let input = BinBuilder::root().i32(LIST).i32(-1).build();
     assert_err!(Vec<i32>, &input, 12, ErrorCode::InvalidListLength);
     let input = BinBuilder::root().i32(LIST).i32(i32::MIN).build();
     assert_err!(Vec<i32>, &input, 12, ErrorCode::InvalidListLength);
+
+    // over length
+    let input = BinBuilder::root().i32(LIST).i32(MAX_LIST_LEN + 2).build();
+    assert_err!(Vec<i32>, &input, 12, ErrorCode::SequenceTooLong);
+    let input = BinBuilder::root().i32(LIST).i32(i32::MAX).build();
+    assert_err!(Vec<i32>, &input, 12, ErrorCode::SequenceTooLong);
 }
 
 #[test]

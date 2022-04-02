@@ -8,6 +8,7 @@
     unused
 )]
 mod ascii;
+mod constants;
 mod error;
 mod reader;
 mod writer;

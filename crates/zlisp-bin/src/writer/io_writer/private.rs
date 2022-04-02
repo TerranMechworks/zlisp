@@ -1,5 +1,5 @@
 use crate::ascii::to_raw;
-use crate::constants::{FLOAT, INT, LIST, OUTER_LIST_LEN, STRING};
+use crate::constants::{FLOAT, INT, LIST, MAX_LIST_LEN, OUTER_LIST_LEN, STRING};
 use crate::error::{Error, ErrorCode, Result};
 use std::io::Write;
 
@@ -39,18 +39,17 @@ impl<W: Write> IoWriter<W> {
     }
 
     pub fn write_list(&mut self, len: Option<usize>) -> Result<()> {
-        let count: i32 = len
+        let len: i32 = len
             .ok_or_else(|| Error::new(ErrorCode::SequenceMustHaveLength, None))
             .and_then(|len| {
-                len.checked_add(1)
-                    .ok_or_else(|| Error::new(ErrorCode::SequenceTooLong, None))
-            })
-            .and_then(|len| {
-                len.try_into()
-                    .map_err(|_| Error::new(ErrorCode::SequenceTooLong, None))
+                if len > MAX_LIST_LEN {
+                    Err(Error::new(ErrorCode::SequenceTooLong, None))
+                } else {
+                    Ok(len as i32)
+                }
             })?;
-        self.write_all(&LIST.to_le_bytes())?;
-        self.write_all(&count.to_le_bytes())
+        // SAFETY: len < i32::MAX
+        self.write_list_unchecked(len)
     }
 
     pub fn write_list_unchecked(&mut self, len: i32) -> Result<()> {

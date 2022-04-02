@@ -4,6 +4,7 @@ pub const STRING: i32 = 3;
 pub const LIST: i32 = 4;
 pub const OUTER_LIST_LEN: i32 = 2;
 pub const INVALID_TYPE: i32 = 5;
+pub const MAX_LIST_LEN: i32 = 4096;
 
 pub struct BinBuilder(Vec<u8>);
 

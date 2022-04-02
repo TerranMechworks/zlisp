@@ -1,3 +1,4 @@
+use super::bin_builder::MAX_LIST_LEN;
 use assert_matches::assert_matches;
 use zlisp_bin::{to_vec, ErrorCode};
 
@@ -61,6 +62,15 @@ fn string_tests() {
 
     let over_len = " ".repeat(256);
     assert_err!(&str, &over_len, ErrorCode::StringTooLong);
+}
+
+#[test]
+fn seq_tests() {
+    let max_len: Vec<i32> = (0..MAX_LIST_LEN).collect();
+    let _ = to_vec(&max_len).unwrap();
+
+    let over_len: Vec<i32> = (0..=MAX_LIST_LEN).collect();
+    assert_err!(Vec<i32>, over_len, ErrorCode::SequenceTooLong);
 }
 
 #[test]

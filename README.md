@@ -28,9 +28,9 @@ Ints are always 32-bit signed integers.
 
 Floats are single-precision IEEE 754 floating-point numbers (32 bits).
 
-Strings are sequences of bytes (8 bits), where each byte must also be a valid ASCII character (in the range 1-127). Null characters and quote characters are not permitted. Null characters are too much trouble for C code, and quote characters are used for string quoting, but cannot be escaped. In principle, the maximum length for strings is 2147483647/0x7FFFFFFF bytes. However, since at least one data format does not allow strings of more than 255 bytes, for compatibility this is chosen as the maximum length in all formats.
+Strings are sequences of bytes (8 bits), where each byte must also be a valid ASCII character (in the range 1-127). Null characters and quote characters are not permitted. Null characters are too much trouble for C code, and quote characters are used for string quoting, but cannot be escaped. For the binary format, the maximum length for strings is technically 2147483647/0x7FFFFFFF bytes. However, since the text format does not allow strings of more than 255 bytes, for compatibility this is chosen as the maximum length in all formats.
 
-Lists are sequences of zero or more values. This means the sequence is heterogeneous. The maximum length for sequences is 2147483647 - 1/0x7FFFFFFF - 1 values; for compatibility in all formats.
+Lists are sequences of zero or more values. This means the sequence is heterogeneous. For the binary format, the maximum length for sequences is technically 2147483647 - 1/0x7FFFFFFF - 1 values. However, this would allow malformed inputs to allocate a lot of memory. The binary format is not hardened against malicious/untrusted input. For example, it's still possible to construct arbitrarily deep nesting. This is simply a mitigation for accidentally malformed data.
 
 ## Binary data format
 
@@ -51,7 +51,7 @@ Floats are encoded as little-endian 32-bit/single-precision IEEE 754 floating-po
 
 Strings are encoded with the string length as an int, followed by the characters encoded into an ASCII byte sequence with no embedded null or quote characters (`\0` or `"`, respectively). The byte sequence is also not terminated by a null character (not zero terminated). As mentioned above, because the maximum encoded string length is 255 in the text data format, this is also used as the limit in the binary data format to retain compatibility.
 
-For a list, the encoded list length is the length + 1. This is encoded as an int, followed by each value. This means the encoded length of an empty list is 1, and an encoded length of 0 or less is invalid. We haven't tested what the actual maximum length of a list is, so the maximum length is simply a restriction based on the encoding of the length.
+For a list, the encoded list length is the length + 1. This is encoded as an int, followed by each value. This means the encoded length of an empty list is 1, and an encoded length of 0 or less is invalid. We haven't tested what the actual maximum length of a list is, but to avoid issues with malformed data, the length limit is 4096.
 
 An additional restriction on the binary data format is that the outermost value must be a list with the length of 1. The binary data format read methods strip this outer list, and the binary data format write methods add it. There are no examples of the value this outer list contains being anything other than a list, but this isn't validated.
 

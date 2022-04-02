@@ -1,7 +1,9 @@
+use crate::constants::MAX_STRING_LEN;
 use crate::error::{Error, ErrorCode, Result};
 
 pub fn from_raw<'a>(v: &'a [u8], start_offset: usize) -> Result<&'a str> {
-    if v.len() > 255 {
+    // SAFETY: MAX_STRING_LEN < i32::MAX, usize::MIN > i32::MIN
+    if v.len() > MAX_STRING_LEN {
         return Err(Error::new(ErrorCode::StringTooLong, Some(start_offset)));
     }
 
@@ -27,14 +29,11 @@ pub fn from_raw<'a>(v: &'a [u8], start_offset: usize) -> Result<&'a str> {
 pub fn to_raw<'a>(s: &'a str) -> Result<(&'a [u8], i32)> {
     let v = s.as_bytes();
 
-    let len: i32 = v
-        .len()
-        .try_into()
-        .map_err(|_| Error::new(ErrorCode::StringTooLong, None))?;
-
-    if len > 255 {
+    if v.len() > MAX_STRING_LEN {
         return Err(Error::new(ErrorCode::StringTooLong, None));
     }
+    // SAFETY: MAX_STRING_LEN < i32::MAX, usize::MIN > i32::MIN
+    let len = v.len() as i32;
 
     for b in v.iter().copied() {
         if b == 0 {

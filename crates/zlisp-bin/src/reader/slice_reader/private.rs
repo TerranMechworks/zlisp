@@ -1,5 +1,5 @@
 use crate::ascii::from_raw;
-use crate::constants::{FLOAT, INT, LIST, STRING};
+use crate::constants::{FLOAT, INT, LIST, MAX_LIST_LEN, MAX_STRING_LEN, STRING};
 use crate::error::{Error, ErrorCode, Result, TokenType};
 
 #[derive(Debug, Clone, PartialEq)]
@@ -56,8 +56,13 @@ impl<'a> SliceReader<'a> {
     fn take_str(&mut self) -> Result<&'a str> {
         let offset = self.offset;
         let len = self.take_i32().and_then(|len| {
-            len.try_into()
-                .map_err(|_| Error::new(ErrorCode::InvalidStringLength, Some(offset)))
+            if len < 0 {
+                Err(Error::new(ErrorCode::InvalidStringLength, Some(offset)))
+            } else if len > MAX_STRING_LEN as i32 {
+                Err(Error::new(ErrorCode::StringTooLong, Some(offset)))
+            } else {
+                Ok(len as usize)
+            }
         })?;
         let str_offset = self.offset;
         self.take_n(len).and_then(|v| from_raw(v, str_offset))
@@ -65,16 +70,18 @@ impl<'a> SliceReader<'a> {
 
     fn take_list(&mut self) -> Result<usize> {
         let offset = self.offset;
-        self.take_i32()
-            .and_then(|len| {
-                // for some reason, the length is one bigger than the values in the list
-                len.checked_sub(1)
-                    .ok_or_else(|| Error::new(ErrorCode::InvalidListLength, Some(offset)))
-            })
-            .and_then(|len| {
-                len.try_into()
-                    .map_err(|_| Error::new(ErrorCode::InvalidListLength, Some(offset)))
-            })
+        self.take_i32().and_then(|len| {
+            // for some reason, the length is one bigger than the values in the
+            // list. at the bottom end, the length is invalid anyway...
+            let len = len.saturating_sub(1);
+            if len < 0 {
+                Err(Error::new(ErrorCode::InvalidListLength, Some(offset)))
+            } else if len > MAX_LIST_LEN as i32 {
+                Err(Error::new(ErrorCode::SequenceTooLong, Some(offset)))
+            } else {
+                Ok(len as usize)
+            }
+        })
     }
 
     pub fn read_i32(&mut self) -> Result<i32> {
